@@ -234,7 +234,7 @@ def parse_define(path):
         for line in fp.readlines():
             line = line.strip()
             if line.startswith("#define"):
-		line = line.replace('"','')
+                line = line.replace('"','')
                 _, variable, line = line.split(" ", 2)
                 variable = variable.strip()
                 try:
@@ -474,7 +474,7 @@ linker_script = env.Command(
     join("$BUILD_DIR", "esp8266_out.ld"),
     join(FRAMEWORK_DIR, "components", "esp8266", "ld", "esp8266.ld"),
     env.VerboseAction(
-#	$(CC) $(OUTLD_CFLAGS) -I ../include -C -P -x c -E $< -o $@ #origin
+#    $(CC) $(OUTLD_CFLAGS) -I ../include -C -P -x c -E $< -o $@ #origin
         '$CC $OUTLD_CFLAGS -I"$PROJECTSRC_DIR" -P -x c -E $SOURCE -o $TARGET',
         "Generating LD script $TARGET")
 )
@@ -484,7 +484,7 @@ linker_script = env.Command(
     join("$BUILD_DIR", "esp8266_common_out.ld"),
     join(FRAMEWORK_DIR, "components", "esp8266", "ld", "esp8266.common.ld"),
     env.VerboseAction(
-#	$(CC) -I ../include -C -P -x c -E $< -o $@ #origin
+#    $(CC) -I ../include -C -P -x c -E $< -o $@ #origin
         '$CC -I"$PROJECTSRC_DIR" -P -x c -E $SOURCE -o $TARGET',
         "Generating LD script $TARGET")
 )
@@ -554,7 +554,7 @@ env.Append(
     LINKFLAGS_POST=[
         "-lgcc", "-lstdc++", "-lgcov",
         "-Wl,--end-group",
-	    "-Wl,-EL",
+        "-Wl,-EL",
     ],
     MAP=[
         "-Wl,-Map=\"$BUILD_DIR/${PROGNAME}.map\"",
@@ -674,22 +674,22 @@ build_excl = [
 ]
 lib_ignore=env.get('LIB_IGNORE',[])
 if isdir("c:\\users\\test"):
-	k = build_dirs+build_excl
-	new_lib=[]
-	for p in listdir(join(FRAMEWORK_DIR, "components")):
-	    if(isdir(join(FRAMEWORK_DIR, "components", p))):
-        	if(p not in k):
+    k = build_dirs+build_excl
+    new_lib=[]
+    for p in listdir(join(FRAMEWORK_DIR, "components")):
+        if(isdir(join(FRAMEWORK_DIR, "components", p))):
+            if(p not in k):
                     if p not in lib_ignore: new_lib.append(p)
-        	else: k.remove(p)
-	if(new_lib or k):
-	    print("%s %s\n%s %s" %(
-		click.style("New lib: ", fg="red", bold=True),
-		", ".join(new_lib),
-		click.style("Lib not found: ", fg="red", bold=True),
-		", ".join(k),
+            else: k.remove(p)
+    if(new_lib or k):
+        print("%s %s\n%s %s" %(
+        click.style("New lib: ", fg="red", bold=True),
+        ", ".join(new_lib),
+        click.style("Lib not found: ", fg="red", bold=True),
+        ", ".join(k),
                 )
-	    )
-	    env.Exit(1)
+        )
+        env.Exit(1)
 
 for d in build_dirs:
     if d in lib_ignore: continue

@@ -150,6 +150,7 @@ def check_ifneq(**kwargs):
     return not check_ifeq(**kwargs)
 
 def parse_mk(path, **kwargs):
+    #print("parse_mk:" + path)
     result = {}
     variable = None
     multi = False
@@ -218,13 +219,15 @@ def parse_mk(path, **kwargs):
                 line = line[:-1].strip()
             kwargs={'token':token, 'result':result}
             line = parse_var(line, **kwargs)
+            #print("parse_var: " + line)
+
             line = line.replace("-L ", "-L")
             line = line.replace("'\"", "\\\"")
             line = line.replace("\"'", "\\\"")
             result[variable].extend([l.strip() for l in line.split()])
             if not multi:
                 variable = None
-#    print("result", result)
+    #print("result", result)
     return result
 
 def parse_define(path):
@@ -286,6 +289,10 @@ def build_comp(envs, path, **kwargs):
                     src_filter += " +<*.[sSc]*>"
                 for f in src_dirs:
                     src_filter += " +<%s/*.[sSc]*>" % f
+            elif "COMPONENT_SRCDIRS" in params:
+                src_filter += " -<%s>" % path
+                print("omit dir: " + path)
+
             if params.get("COMPONENT_OBJEXCLUDE"):
                 for f in params.get("COMPONENT_OBJEXCLUDE"):
                     src_filter += " -<%s>" % f.replace(".o", ".c")
@@ -461,15 +468,53 @@ env.Replace(
 )
 
 #
+# Generate partition table
+#
+
+search_path = [
+                join(FRAMEWORK_DIR, "components", "partition_table"),
+                join(env.subst("$PROJECTSRC_DIR")),
+              ]
+if('CONFIG_PARTITION_TABLE_CUSTOM_FILENAME' in env['SDKCONFIG']):
+    partitions_csv = env['SDKCONFIG']['CONFIG_PARTITION_TABLE_CUSTOM_FILENAME']
+else:
+    partitions_csv = env['SDKCONFIG']['CONFIG_PARTITION_TABLE_FILENAME']
+partitions_csv = env.BoardConfig().get("build.partitions", partitions_csv)
+full_partitions_csv=search_file(partitions_csv, search_path)
+env.Replace(
+    PARTITIONS_TABLE_CSV=full_partitions_csv if full_partitions_csv and isfile(full_partitions_csv) else abspath(partitions_csv))
+
+partition_table = env.Command(
+    join("$BUILD_DIR", "partitions.bin"),
+    "$PARTITIONS_TABLE_CSV",
+    env.VerboseAction('"$PYTHONEXE" "%s" -q $SOURCE $TARGET' % join(
+        FRAMEWORK_DIR, "components", "partition_table", "gen_esp32part.py"),
+        "Generating partitions $TARGET"))
+env.Depends("$BUILD_DIR/$PROGNAME$PROGSUFFIX", partition_table)
+
+#
 # Generate linker script
 #
 
-env.Replace(
-    OUTLD_CFLAGS=[
-        "-DAPP_OFFSET=CONFIG_APP1_OFFSET",
-        "-DAPP_SIZE=CONFIG_APP1_SIZE",
-    ]
-)
+if sdkconfig.get("CONFIG_PARTITION_TABLE_FILENAME") :
+    with open(full_partitions_csv) as fp:
+        for l in fp.readlines():
+            items = l.split(",")
+            if items[1].strip() == 'app' and len(items) == 5:
+                env.Replace(
+                    OUTLD_CFLAGS=[
+                        "-DAPP_OFFSET=%s" % items[3],
+                        "-DAPP_SIZE=%s" % items[3],
+                    ]
+                )
+                break
+else:
+    env.Replace(
+        OUTLD_CFLAGS=[
+            "-DAPP_OFFSET=CONFIG_APP1_OFFSET",
+            "-DAPP_SIZE=CONFIG_APP1_SIZE",
+        ]
+    )
 linker_script = env.Command(
     join("$BUILD_DIR", "esp8266_out.ld"),
     join(FRAMEWORK_DIR, "components", "esp8266", "ld", "esp8266.ld"),
@@ -619,31 +664,6 @@ else:
 env.Replace(ASFLAGS=[])
 
 #
-# Generate partition table
-#
-
-search_path = [
-                join(FRAMEWORK_DIR, "components", "partition_table"),
-                join(env.subst("$PROJECTSRC_DIR")),
-              ]
-if('CONFIG_PARTITION_TABLE_CUSTOM_FILENAME' in env['SDKCONFIG']):
-    partitions_csv = env['SDKCONFIG']['CONFIG_PARTITION_TABLE_CUSTOM_FILENAME']
-else:
-    partitions_csv = env['SDKCONFIG']['CONFIG_PARTITION_TABLE_FILENAME']
-partitions_csv = env.BoardConfig().get("build.partitions", partitions_csv)
-full_partitions_csv=search_file(partitions_csv, search_path)
-env.Replace(
-    PARTITIONS_TABLE_CSV=full_partitions_csv if full_partitions_csv and isfile(full_partitions_csv) else abspath(partitions_csv))
-
-partition_table = env.Command(
-    join("$BUILD_DIR", "partitions.bin"),
-    "$PARTITIONS_TABLE_CSV",
-    env.VerboseAction('"$PYTHONEXE" "%s" -q $SOURCE $TARGET' % join(
-        FRAMEWORK_DIR, "components", "partition_table", "gen_esp32part.py"),
-        "Generating partitions $TARGET"))
-env.Depends("$BUILD_DIR/$PROGNAME$PROGSUFFIX", partition_table)
-
-#
 # Compile bootloader
 #
 
@@ -700,6 +720,7 @@ for d in build_dirs:
         lib_build.append((d,filt+" -<test*>"))
     elif(isdir(component_dir)):
         kwargs={'SET':{'COMPONENT_PATH':component_dir}}
+        print("check build_dir: " + d)
         lib_build.append((d, build_comp(env, component_dir, **kwargs)))
 
 for d,filt in lib_build:

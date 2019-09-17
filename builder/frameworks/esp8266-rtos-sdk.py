@@ -503,10 +503,11 @@ if sdkconfig.get("CONFIG_PARTITION_TABLE_FILENAME") :
             if items[1].strip() == 'app' and len(items) == 5:
                 env.Replace(
                     OUTLD_CFLAGS=[
-                        "-DAPP_OFFSET=%s" % items[3],
-                        "-DAPP_SIZE=%s" % items[3],
+                        "-DAPP_OFFSET=%s" % items[3].strip(),
+                        "-DAPP_SIZE=%s" % items[4].strip(),
                     ]
                 )
+                env['SDKCONFIG']['FIRMWARE_OFFSET'] = items[3].strip()
                 break
 else:
     env.Replace(
@@ -515,6 +516,8 @@ else:
             "-DAPP_SIZE=CONFIG_APP1_SIZE",
         ]
     )
+    env['SDKCONFIG']['FIRMWARE_OFFSET'] = env['SDKCONFIG']['CONFIG_APP1_OFFSET']
+    
 linker_script = env.Command(
     join("$BUILD_DIR", "esp8266_out.ld"),
     join(FRAMEWORK_DIR, "components", "esp8266", "ld", "esp8266.ld"),

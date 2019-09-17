@@ -314,7 +314,7 @@ if upload_protocol == "esptool":
             "--debug", "--progress", "-i", "$UPLOAD_PORT", "-p", "3232",
             "$UPLOAD_FLAGS"
         ],
-        UPLOADCMD='"$PYTHONEXE" "$UPLOADER" $UPLOADERFLAGS 0x10000 "$SOURCE"',
+        UPLOADCMD='"$PYTHONEXE" "$UPLOADER" $UPLOADERFLAGS %s "$SOURCE"' % env['SDKCONFIG']['FIRMWARE_OFFSET'] ,
         UPLOADOTACMD='"$PYTHONEXE" "$UPLOADEROTA" $UPLOADEROTAFLAGS -f "$SOURCE"',
     )
     for image in env.get("FLASH_EXTRA_IMAGES", []):
@@ -392,7 +392,7 @@ elif upload_protocol in debug_tools:
     uploader_flags = ["-s", _to_unix_slashes(openocd_dir)]
     uploader_flags.extend(
         debug_tools.get(upload_protocol).get("server").get("arguments", []))
-    uploader_flags.extend(["-c", 'program_esp32 {{$SOURCE}} 0x10000 verify'])
+    uploader_flags.extend(["-c", 'program_esp32 {{$SOURCE}} %s verify' % env['SDKCONFIG']['FIRMWARE_OFFSET']])
     for image in env.get("FLASH_EXTRA_IMAGES", []):
         uploader_flags.extend(
             ["-c", 'program_esp32 {{%s}} %s verify' % (

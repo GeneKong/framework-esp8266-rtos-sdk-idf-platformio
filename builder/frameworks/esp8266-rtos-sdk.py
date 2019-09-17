@@ -487,7 +487,7 @@ env.Replace(
 partition_table = env.Command(
     join("$BUILD_DIR", "partitions.bin"),
     "$PARTITIONS_TABLE_CSV",
-    env.VerboseAction('"$PYTHONEXE" "%s" -q $SOURCE $TARGET' % join(
+    env.VerboseAction('"$PYTHONEXE" "%s" --disable-md5sum -q $SOURCE $TARGET' % join(
         FRAMEWORK_DIR, "components", "partition_table", "gen_esp32part.py"),
         "Generating partitions $TARGET"))
 env.Depends("$BUILD_DIR/$PROGNAME$PROGSUFFIX", partition_table)

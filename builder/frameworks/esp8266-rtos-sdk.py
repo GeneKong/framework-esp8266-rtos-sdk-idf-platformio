@@ -75,10 +75,9 @@ def parse_var(ln, **kwargs):
                     state=k
                     break
             if(state is None):
-                print(click.style("Error parse var", fg="red"))
+                print(click.style("Can't parse var", fg="yellow"))
                 print(ln, c, p, node)
                 return ln
-#                raise ValueError("parse_var err", ln, c, p, node)
             end=state.get('end',0)
             node=state['node_next']
             if(end):
@@ -569,6 +568,7 @@ env.Prepend(
     CPPDEFINES=[
 #        ("__ESP_FILE__", "\\\"null\\\""),
         ("__ESP_FILE__", "__FILE__"),
+        ("configSUPPORT_STATIC_ALLOCATION", "1"),
         "WITH_POSIX",
         "ESP_PLATFORM",
         ("IDF_VER", '\\"%s\\"' %

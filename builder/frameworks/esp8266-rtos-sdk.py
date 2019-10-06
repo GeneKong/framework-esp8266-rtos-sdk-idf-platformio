@@ -569,6 +569,10 @@ env.Prepend(
 #        ("__ESP_FILE__", "\\\"null\\\""),
         ("__ESP_FILE__", "__FILE__"),
         ("configSUPPORT_STATIC_ALLOCATION", "1"),
+        ("FE_IS_IN_ISR", "xPortInIsrContext"),
+        ("USE_OSLIB", "1"),
+        ("USE_ESPRESSIF8266", "1"),
+        ("USE_FEMBED_LWIP", "1"),
         "WITH_POSIX",
         "ESP_PLATFORM",
         ("IDF_VER", '\\"%s\\"' %

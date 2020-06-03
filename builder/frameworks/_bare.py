@@ -46,7 +46,7 @@ env.Append(
 
     ],
     OPTIMIZATION_FLAGS=[
-        "-Og",
+        "-Os",
     ],
     DEBUG_FLAGS=[
         "-ggdb",

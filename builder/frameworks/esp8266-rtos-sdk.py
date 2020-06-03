@@ -498,8 +498,9 @@ env.Depends("$BUILD_DIR/$PROGNAME$PROGSUFFIX", partition_table)
 if sdkconfig.get("CONFIG_PARTITION_TABLE_FILENAME") :
     with open(full_partitions_csv) as fp:
         for l in fp.readlines():
+            if l.strip().startswith('#'): continue
             items = l.split(",")
-            if items[1].strip() == 'app' and len(items) == 5:
+            if items[1].strip() in ['app','0'] and len(items) == 5:
                 env.Replace(
                     OUTLD_CFLAGS=[
                         "-DAPP_OFFSET=%s" % items[3].strip(),
@@ -560,10 +561,12 @@ env.Prepend(
     CFLAGS=[
 #        "-Wno-old-style-declaration"
         "-Wno-unknown-pragmas", #libsodium
+        "-Os",
     ],
     CPPFLAGS=[
         "-MMD",
         "-MP",
+        "-Os",
     ],
     CPPDEFINES=[
 #        ("__ESP_FILE__", "\\\"null\\\""),
@@ -586,6 +589,7 @@ env.Prepend(
 #        "-Wno-unused-parameter",
 #        "-Wno-sign-compare",
 #        "-Wno-error=unused-function"
+         "-Os",
     ],
 )
 

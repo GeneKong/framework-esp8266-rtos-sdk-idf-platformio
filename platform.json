@@ -31,7 +31,7 @@
     "framework-esp8266-rtos-sdk": {
       "type": "framework",
       "optional": true,
-      "version": "https://github.com/espressif/ESP8266_RTOS_SDK.git#release/v3.2"
+      "version": "https://github.com/FastEmbedded/ESP8266_RTOS_SDK.git#release/v3.3"
     },
     "tool-curl-for-win": {
       "type": "uploader",
